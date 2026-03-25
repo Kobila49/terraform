@@ -1,0 +1,64 @@
+# Input Variables, Locals, and Outputs
+
+This module demonstrates how to use **input variables**, **local values**, and **outputs** in Terraform configurations.
+
+## What This Folder Does
+
+### Setup
+- Provisions an **AWS EC2 instance** running Ubuntu 22.04
+- Uses **input variables** to make the configuration reusable and flexible
+- Separates configuration for different **environments** (dev vs. prod)
+
+### Key Features Demonstrated
+
+#### 1. Input Variables (`variables.tf`)
+- **`ec2_instance_type`** - Configurable EC2 instance type with validation
+  - Only allows `t2.micro` and `t3.micro` (production instances use `t3.large`)
+  - Default: `t3.micro` (free tier eligible)
+  - Includes validation rules to prevent invalid values
+  
+- **`ec2_volume_config`** - Object-type variable grouping related configuration
+  - Combines volume size and type into a single object
+  - Default: 10 GB gp3 volume
+  - Demonstrates how to structure complex variable types
+
+- **`additional_tags`** - Map variable for flexible tagging
+  - Allows applying custom tags to resources
+  - Default: empty map
+  - Demonstrates using maps for dynamic configuration
+
+#### 2. Resources (`compute.tf`)
+- Creates an **AWS EC2 instance** with:
+  - Latest Ubuntu 22.04 AMI (automatically fetched via data source)
+  - Customizable instance type and storage via variables
+  - Automatic tagging with `ManagedBy = "Terraform"` plus additional user tags
+  - Demonstrates merging default and variable-provided tags
+
+#### 3. Environment-Specific Configurations
+- **`terraform.tfvars`** - Default values for any workspace
+- **`dev.terraform.tfvars`** - Development environment (t3.micro, free tier)
+- **`prod.terraform.tfvars`** - Production environment (t3.large, NOT free tier compliant)
+
+#### Usage Example
+```bash
+# Use default development configuration
+terraform apply
+
+# Use development environment
+terraform apply -var-file="dev.terraform.tfvars"
+
+# Use production environment (AWS charges will apply)
+terraform apply -var-file="prod.terraform.tfvars"
+
+# Override variables at command line
+terraform apply -var="ec2_instance_type=t3.micro"
+```
+
+## Learning Objectives
+
+This module teaches:
+1. How to define **input variables** with types, defaults, and validation
+2. How to use **variables in resource configurations**
+3. How to organize variables into **logical groups** (object types)
+4. How to manage **multiple environments** with different `.tfvars` files
+5. How to **merge and override** values dynamically (merging tags)

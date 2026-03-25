@@ -1,0 +1,6 @@
+# for illustration purposes
+
+bucket = "terraform-course-igorkos-remote-backend"
+key    = "04-backends/prod/state.tfstate"
+region = "eu-west-1"
+use_lockfile = true
