@@ -1,64 +1,146 @@
 # Input Variables, Locals, and Outputs
 
-This module demonstrates how to use **input variables**, **local values**, and **outputs** in Terraform configurations.
+This folder is a small Terraform example focused on three core concepts:
 
-## What This Folder Does
+- **Input variables** for reusable configuration
+- **Locals** for shared values inside the module
+- **Outputs** for exposing useful values after `apply`
 
-### Setup
-- Provisions an **AWS EC2 instance** running Ubuntu 22.04
-- Uses **input variables** to make the configuration reusable and flexible
-- Separates configuration for different **environments** (dev vs. prod)
+## What This Example Includes
 
-### Key Features Demonstrated
+### Active resources
 
-#### 1. Input Variables (`variables.tf`)
-- **`ec2_instance_type`** - Configurable EC2 instance type with validation
-  - Only allows `t2.micro` and `t3.micro` (production instances use `t3.large`)
-  - Default: `t3.micro` (free tier eligible)
-  - Includes validation rules to prevent invalid values
-  
-- **`ec2_volume_config`** - Object-type variable grouping related configuration
-  - Combines volume size and type into a single object
-  - Default: 10 GB gp3 volume
-  - Demonstrates how to structure complex variable types
+The current active configuration creates:
 
-- **`additional_tags`** - Map variable for flexible tagging
-  - Allows applying custom tags to resources
-  - Default: empty map
-  - Demonstrates using maps for dynamic configuration
+- An **S3 bucket** with a unique random suffix
+- A shared set of tags built from **locals**
+- Extra tags merged in through an **input variable**
+- **Sensitive outputs** for selected values
 
-#### 2. Resources (`compute.tf`)
-- Creates an **AWS EC2 instance** with:
-  - Latest Ubuntu 22.04 AMI (automatically fetched via data source)
-  - Customizable instance type and storage via variables
-  - Automatic tagging with `ManagedBy = "Terraform"` plus additional user tags
-  - Demonstrates merging default and variable-provided tags
+### Learning files
 
-#### 3. Environment-Specific Configurations
-- **`terraform.tfvars`** - Default values for any workspace
-- **`dev.terraform.tfvars`** - Development environment (t3.micro, free tier)
-- **`prod.terraform.tfvars`** - Production environment (t3.large, NOT free tier compliant)
+- [`variables.tf`](./variables.tf): input variables, type constraints, and validation
+- [`shared-locals.tf`](./shared-locals.tf): reusable local values and common tags
+- [`s3.tf`](./s3.tf): active AWS resources using locals and variables together
+- [`outputs.tf`](./outputs.tf): output values, including sensitive outputs
+- [`terraform.tfvars`](./terraform.tfvars): example variable values
+- [`dev.terraform.tfvars`](./dev.terraform.tfvars): development-style variable file
+- [`prod.terraform.tfvars`](./prod.terraform.tfvars): production example kept commented out
 
-#### Usage Example
-```bash
-# Use default development configuration
-terraform apply
+## Concepts Demonstrated
 
-# Use development environment
-terraform apply -var-file="dev.terraform.tfvars"
+### 1. Input variables
 
-# Use production environment (AWS charges will apply)
-terraform apply -var-file="prod.terraform.tfvars"
+Defined in [`variables.tf`](./variables.tf):
 
-# Override variables at command line
-terraform apply -var="ec2_instance_type=t3.micro"
+- `ec2_instance_type`
+  - String variable with validation
+  - Only allows `t2.micro` and `t3.micro`
+  - Default is `t3.micro`
+
+- `ec2_volume_config`
+  - Object variable with:
+    - `size`
+    - `type`
+  - Shows how to group related settings into one value
+
+- `additional_tags`
+  - `map(string)` variable
+  - Lets you add custom tags to resources
+
+- `my_sensitive_value`
+  - Sensitive string variable
+  - Demonstrates how Terraform handles protected values
+
+### 2. Locals
+
+Defined in [`shared-locals.tf`](./shared-locals.tf):
+
+- `project`
+- `project_owner`
+- `cost_center`
+- `managed_by`
+- `common_tags`
+
+These locals keep repeated values in one place and make resource configuration easier to read.
+
+### 3. Outputs
+
+Defined in [`outputs.tf`](./outputs.tf):
+
+- `s3_bucket_name`
+- `sensitive_var`
+
+Both outputs are marked as sensitive, which is useful when you want Terraform to avoid displaying values plainly in normal CLI output.
+
+## How Values Flow
+
+This example shows a common Terraform pattern:
+
+1. Variables accept user input.
+2. Locals define shared internal values.
+3. Resources combine both.
+4. Outputs expose final values after provisioning.
+
+In [`s3.tf`](./s3.tf), tags are built with:
+
+```hcl
+merge(local.common_tags, var.additional_tags)
 ```
 
-## Learning Objectives
+That makes it easy to keep default project tags while still allowing overrides or additions from `.tfvars` files.
 
-This module teaches:
-1. How to define **input variables** with types, defaults, and validation
-2. How to use **variables in resource configurations**
-3. How to organize variables into **logical groups** (object types)
-4. How to manage **multiple environments** with different `.tfvars` files
-5. How to **merge and override** values dynamically (merging tags)
+## Variable Files
+
+You can use different variable files to simulate different environments:
+
+- `terraform.tfvars`: default example values
+- `dev.terraform.tfvars`: development-friendly values
+- `prod.terraform.tfvars`: production example, currently commented out
+
+## Usage
+
+Initialize the folder:
+
+```bash
+terraform init
+```
+
+Review the plan with the default values:
+
+```bash
+terraform plan
+```
+
+Use a specific variable file:
+
+```bash
+terraform plan -var-file="dev.terraform.tfvars"
+```
+
+Override a value directly:
+
+```bash
+terraform plan -var="ec2_instance_type=t3.micro"
+```
+
+Apply the configuration:
+
+```bash
+terraform apply
+```
+
+## Notes
+
+- The EC2 example in [`compute.tf`](./compute.tf) is currently commented out and serves as a reference for variable usage.
+- The AWS provider region is set in [`provider.tf`](./provider.tf) to `eu-west-1`.
+
+## Learning Goals
+
+After working through this folder, you should be comfortable with:
+
+- Defining input variables with types, defaults, and validation
+- Using locals to avoid repeating shared values
+- Merging maps for reusable tagging
+- Marking variables and outputs as sensitive
+- Supplying values through `.tfvars` files
