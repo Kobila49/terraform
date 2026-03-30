@@ -51,6 +51,6 @@ variable "additional_tags" {
 }
 
 variable "my_sensitive_value" {
-  type = string
+  type      = string
   sensitive = true
 }
