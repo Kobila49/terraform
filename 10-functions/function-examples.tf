@@ -8,8 +8,8 @@ locals {
 }
 
 output "example1" {
-    value = startswith(lower(local.name), "john")
-  
+  value = startswith(lower(local.name), "john")
+
 }
 
 output "example2" {
