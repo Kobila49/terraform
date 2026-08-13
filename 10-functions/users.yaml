@@ -1,0 +1,5 @@
+users:
+- name: Igor
+  group: developers
+- name: Vitalina
+  group: auditors
